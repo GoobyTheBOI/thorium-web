@@ -11,6 +11,8 @@ import "../app.css";
 import dynamic from "next/dynamic";
 const Reader = dynamic<{ rawManifest: object; selfHref: string; plugin?: ThPlugin }>(() => import("../../components/Epub/StatefulReader").then((mod) => mod.StatefulReader), { ssr: false });
 
+import { CustomSettingsPlugin } from "@/plugins/CustomSettingsPlugin";
+
 import { StatefulLoader } from "@/components/StatefulLoader";
 
 import { useTheming } from "@/preferences/hooks/useTheming";
@@ -18,14 +20,14 @@ import { usePreferences } from "@/preferences/hooks/usePreferences";
 
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { ThemeKeyType } from "@/preferences";
-import { 
-  setBreakpoint, 
-  setColorScheme, 
-  setContrast, 
-  setForcedColors, 
-  setMonochrome, 
-  setReducedMotion, 
-  setReducedTransparency 
+import {
+  setBreakpoint,
+  setColorScheme,
+  setContrast,
+  setForcedColors,
+  setMonochrome,
+  setReducedMotion,
+  setReducedTransparency
 } from "@/lib/themeReducer";
 
 import { propsToCSSVars } from "@/core/Helpers/propsToCSSVars";
@@ -47,13 +49,13 @@ export default function ReaderPage({ searchParams }: { searchParams: Promise<{ [
   const dispatch = useAppDispatch();
 
   // Init theming (breakpoints, theme, media queries…)
-  useTheming<ThemeKeyType>({ 
+  useTheming<ThemeKeyType>({
     theme: theme,
     themeKeys: RSPrefs.theming.themes.keys,
     systemKeys: RSPrefs.theming.themes.systemThemes,
     breakpointsMap: RSPrefs.theming.breakpoints,
     initProps: {
-      ...propsToCSSVars(RSPrefs.theming.arrow, "arrow"), 
+      ...propsToCSSVars(RSPrefs.theming.arrow, "arrow"),
       ...propsToCSSVars(RSPrefs.theming.icon, "icon"),
       ...propsToCSSVars(RSPrefs.theming.layout, "layout")
     },
@@ -78,7 +80,7 @@ export default function ReaderPage({ searchParams }: { searchParams: Promise<{ [
       if (params["book"]) {
         book = Array.isArray(params["book"]) ? params["book"][0] : params["book"];
       }
-      
+
       if (book.startsWith("http://") || book.startsWith("https://")) {
         // TODO: use URL.canParse()
         // Make sure streamer gets Base64Url
@@ -93,13 +95,13 @@ export default function ReaderPage({ searchParams }: { searchParams: Promise<{ [
         });
         const sanitizedBook = new URL(sanitizedBookPathnameArray.join("/"), bookUrl.origin);
         publicationURL = sanitizedBook.href;
-          
+
         if (!publicationURL.endsWith("manifest.json") && !publicationURL.endsWith("/"))
           publicationURL += "/";
       } else {
         throw new Error("book parameter is required");
       }
-  
+
       const manifestLink = new Link({ href: "manifest.json" });
       const fetcher = new HttpFetcher(undefined, publicationURL);
       const fetched = fetcher.get(manifestLink);
@@ -118,13 +120,13 @@ export default function ReaderPage({ searchParams }: { searchParams: Promise<{ [
 
   return (
     <>
-    { error 
-      ? <span>{ error }</span> 
+    { error
+      ? <span>{ error }</span>
       : <StatefulLoader isLoading={ readerIsLoading }>
-          { isClient && manifest && selfLink && 
-            <Reader rawManifest={ manifest } selfHref={ selfLink } />
+          { isClient && manifest && selfLink &&
+            <Reader rawManifest={manifest} selfHref={selfLink} plugin={CustomSettingsPlugin} />
           }
-        </StatefulLoader>        
+        </StatefulLoader>
     }
     </>
   );
